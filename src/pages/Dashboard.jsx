@@ -302,7 +302,17 @@ export default function Dashboard() {
     try {
       const res = await getMyBooking();
       const booking = res.data.data || null;
-      setActiveBooking(booking);
+      setActiveBooking(prev => {
+        // If we had an active booking but server says none exists now,
+        // the admin force-released it — clean up ticket UI.
+        if (prev && !booking) {
+          setShowTicket(false);
+          hasAutoOpenedTicket.current = false;
+          lastExtendedAt.current = null;
+          setTimeout(() => toast.info?.('Your parking slot was released by an admin.'), 0);
+        }
+        return booking;
+      });
       if (booking && !hasAutoOpenedTicket.current) {
         hasAutoOpenedTicket.current = true;
         setShowTicket(true);
